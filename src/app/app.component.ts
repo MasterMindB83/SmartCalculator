@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { parseSelectorToR3Selector } from '@angular/compiler/src/core';
 import { THROW_IF_NOT_FOUND } from '@angular/core/src/di/injector';
-
+import { ViewChild, ElementRef } from '@angular/core';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -9,6 +9,8 @@ import { THROW_IF_NOT_FOUND } from '@angular/core/src/di/injector';
 })
 export class AppComponent {
   title = 'SmartCalculator';
+  @ViewChild('myCanvas') myCanvas: ElementRef;
+  public context: CanvasRenderingContext2D;
   constructor() {
     this.display = '0';
     this.inv = false;
@@ -106,7 +108,7 @@ export class AppComponent {
         }
       }
 
-    return 0;
+    return NaN;
   }
     Priority(sign: string) {
     if ( sign === '+' || sign === '-') {
@@ -129,9 +131,29 @@ export class AppComponent {
     }
   }
   Draw() {
-      const result: Item = this.GetItem(this.display, this.pos);
-      this.pos = result.pos;
-      this.error = result.item;
+    const myCanvas = (<HTMLCanvasElement>this.myCanvas.nativeElement);
+    this.context = myCanvas.getContext('2d');
+    this.context.beginPath();
+    this.context.clearRect(0, 0, myCanvas.width, myCanvas.height);
+    this.context.moveTo(0, myCanvas.height / 2);
+    this.context.strokeStyle = '#000000';
+    this.context.lineWidth = 1;
+    // this.context.rect(0, 0, 300, 300);
+    this.context.lineTo(myCanvas.width, myCanvas.height / 2);
+    this.context.moveTo(myCanvas.width / 2, 0);
+    this.context.lineTo(myCanvas.width / 2, myCanvas.height);
+    this.context.strokeStyle = '#0000ff';
+    for (let i = 0; i < myCanvas.width; i++) {
+      const x = (-myCanvas.width / 2 + i) / 10;
+      const expression = this.display.replace('x', '(' + x + ')');
+      let y = this.Evaluate(expression);
+      y = y * 10;
+      y = myCanvas.height / 2 - y;
+      this.context.moveTo(i - 2, y - 2);
+      this.context.lineTo(i + 2, y + 2);
+    }
+    this.context.stroke();
+
   }
   IsNumber(text: string) {
     let bCifra = true;
