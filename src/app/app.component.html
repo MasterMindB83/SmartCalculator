@@ -23,7 +23,7 @@
   <td width="45"><button  class="button" (click)="SetDisplay('5')">5</button></td>
   <td width="45"><button  class="button" (click)="SetDisplay('6')">6</button></td>
   <td width="45"><button  class="button" (click)="Draw()">Draw</button></td>
-  <td width="45"><button  class="button" (click)="SetDisplay2('-')">-</button></td>
+  <td width="45"><button  class="button" (click)="SetDisplay('-')">-</button></td>
 </tr>
 <tr>
   <td width="45"><button  class="button" (click)="SetDisplay('1')">1</button></td>
@@ -48,6 +48,9 @@
 </tr>
 </table>
 {{error}}
+<div>
+  <button (click)='test()'>Test</button>
+</div>
 <div>
   <canvas #myCanvas class="canvas"></canvas>
 </div>

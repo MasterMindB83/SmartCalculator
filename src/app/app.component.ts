@@ -30,17 +30,20 @@ export class AppComponent {
   EvaluateSum() {
     this.error = '';
     this.display = this.Evaluate(this.display).toString();
+    // this.error = 'test';
   }
   Evaluate(expression: string): number {
-    if (expression === '')
+    let expression2 = expression;
+    if (expression2 === '')
     {
       this.error = 'Error: Empty expression';
       return NaN;
-    } else if (expression === 'NaN')
+    } else if (expression2 === 'NaN')
     {
       return NaN;
+    } else if (expression2.substring(0 , 1) === '-') {
+      expression2 = '0' + expression2;
     }
-    let expression2 = expression;
     while (expression2.substring(0, 1) === '(') {// uklanjanje duplih zagrada
       let pos1 = 1;
       let count = 1;
@@ -71,18 +74,20 @@ export class AppComponent {
     itemNo = 0;
     let pos: number;
     pos = 0;
-    result = this.GetItem(expression2, pos); // ako je funkcija
-    if (result.pos >= expression2.length) {
-      let func: string;
-      func = '';
-      pos = 0;
-      while (this.IsFunc(expression2, pos)) {
-        func += expression2.substring(pos, pos + 1);
+    // result = this.GetItem(expression2, pos); // ako je funkcija
+    // if (result.pos >= expression2.length) {
+      if (this.isFullFunc(expression2)) {
+        // this.error += expression2 + '|';
+        let func: string;
+        func = '';
+        pos = 0;
+        while (this.IsFunc(expression2, pos)) {
+          func += expression2.substring(pos, pos + 1);
+          pos++;
+        }
         pos++;
+        return this.Calculate(0, func, this.Evaluate(expression2.substring(pos, expression2.length - 1)));
       }
-      pos++;
-      return this.Calculate(0, func, this.Evaluate(expression2.substring(pos, expression2.length - 1)));
-    }
       pos = 0;
       while (pos < expression2.length) {
         result = this.GetItem(expression2, pos);
@@ -90,7 +95,10 @@ export class AppComponent {
         pos = result.pos;
         itemNo++;
       }
-      while (itemNo > 1) {
+      while (itemNo > 0) {
+        /*for(let i = 0; i < itemNo; i++) {
+          this.error += '|' + item[i];
+        }*/
         let current = 0;
         if (itemNo === 1) {
           return this.Evaluate(item[0]);
@@ -130,7 +138,25 @@ export class AppComponent {
       return true;
     }
   }
+  test() {
+    const result: Item = this.GetItem(this.display, this.pos);
+    this.pos = result.pos;
+    // this.error = result.item + '|' + this.pos;
+  }
+  isFullFunc(text): boolean {
+    if (this.IsFunc(text, 0)) {
+      const result: Item = this.GetItem(text, 0);
+      if (result.pos >= text.length) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
   Draw() {
+    // this.error = 'test';
     const myCanvas = (<HTMLCanvasElement>this.myCanvas.nativeElement);
     this.context = myCanvas.getContext('2d');
     this.context.beginPath();
@@ -142,15 +168,19 @@ export class AppComponent {
     this.context.lineTo(myCanvas.width, myCanvas.height / 2);
     this.context.moveTo(myCanvas.width / 2, 0);
     this.context.lineTo(myCanvas.width / 2, myCanvas.height);
-    this.context.strokeStyle = '#0000ff';
+    /*for (let i = myCanvas.width / 2; i < myCanvas.width; i + 10) {
+      this.context.strokeText((i / 10).toString(), i, myCanvas.height / 2);
+    }*/
+
+
     for (let i = 0; i < myCanvas.width; i++) {
       const x = (-myCanvas.width / 2 + i) / 10;
       const expression = this.display.replace('x', '(' + x + ')');
       let y = this.Evaluate(expression);
       y = y * 10;
       y = myCanvas.height / 2 - y;
-      this.context.moveTo(i - 2, y - 2);
-      this.context.lineTo(i + 2, y + 2);
+      this.context.moveTo(i, y - 2);
+      this.context.lineTo(i, y + 2);
     }
     this.context.stroke();
 
@@ -175,6 +205,7 @@ export class AppComponent {
   GetItem(text: string, pos1: number) {
     let result: Item;
     let pos2: number = pos1;
+    // this.error = text.substring(pos1, pos1 + 1);
     if (pos1 > text.length) {
       result = {item: '', pos: pos1};
       return result;
@@ -207,7 +238,7 @@ export class AppComponent {
           return result;
         }
     } else if (this.IsFunc(text, pos1)) {
-      pos2 = text.indexOf('(');
+      pos2 = text.indexOf('(', pos1);
       let count: number;
       pos2++;
       count = 1;
@@ -218,10 +249,14 @@ export class AppComponent {
         if ( text.substring(pos2, pos2 + 1) === ')') {
           count--;
         }
-        pos2++;
         if ( count === 0) {
           break;
         }
+        pos2++;
+      }
+      if (count === 0) {
+        result = {pos: pos2 + 1, item: text.substring(pos1, pos2 + 1)};
+        return result;
       }
     } else {
       result = {pos : pos1 + 1, item : text.substring(pos1, pos1 + 1)};
